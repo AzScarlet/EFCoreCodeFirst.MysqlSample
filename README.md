@@ -91,4 +91,4 @@ dotnet ef database update
 ```
 
 ## Migration
-If you want to change database model, just change the model and add new migration schema. after that apply the schema
+If you want to change database like add or remove column, add or delete table. just make changes at the model and add new migration schema. after that apply the schema
