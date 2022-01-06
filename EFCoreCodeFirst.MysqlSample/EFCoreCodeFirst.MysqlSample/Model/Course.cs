@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EFCoreCodeFirst.MysqlSample.Model
 {
-    public class Course
+    public partial class Course
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -13,6 +13,5 @@ namespace EFCoreCodeFirst.MysqlSample.Model
         public string CourseCode { get; set; }
         [Required]
         public string Name { get; set; }
-
     }
 }

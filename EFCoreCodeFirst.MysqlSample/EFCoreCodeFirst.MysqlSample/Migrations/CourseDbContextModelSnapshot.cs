@@ -37,7 +37,7 @@ namespace EFCoreCodeFirst.MysqlSample.Migrations
                     b.HasIndex("CourseCode")
                         .IsUnique();
 
-                    b.ToTable("Courses");
+                    b.ToTable("Courses", (string)null);
                 });
 
             modelBuilder.Entity("EFCoreCodeFirst.MysqlSample.Model.Student", b =>
@@ -63,7 +63,7 @@ namespace EFCoreCodeFirst.MysqlSample.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Students");
+                    b.ToTable("Students", (string)null);
                 });
 
             modelBuilder.Entity("EFCoreCodeFirst.MysqlSample.Model.StudentCourseRelation", b =>
@@ -84,7 +84,7 @@ namespace EFCoreCodeFirst.MysqlSample.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("StudentCourseRelations");
+                    b.ToTable("StudentCourseRelations", (string)null);
                 });
 
             modelBuilder.Entity("EFCoreCodeFirst.MysqlSample.Model.StudentCourseRelation", b =>

@@ -1,0 +1,352 @@
+﻿@page "/student"
+@using EFCoreCodeFirst.MysqlSample.Model
+@using EFCoreCodeFirst.MysqlSample.Service
+
+@inject IJSRuntime js
+
+<PageTitle>Student</PageTitle>
+
+<h1>Student</h1>
+
+<div class="container-fluid">
+    <div class="container-fluid">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Phone Number</th>
+                    <th>Email</th>
+                    <th>Address</th>
+                    <th>Courses</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <Virtualize Items="dataList" Context="item">
+                    <tr>
+                        <td>@item.Name</td>
+                        <td>@item.PhoneNumber</td>
+                        <td>@item.Email</td>
+                        <td>@item.Address</td>
+                        <td><button class="btn btn-primary" @onclick="() => ShowCourse(item.Id)">Courses taken</button></td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn btn-info" @onclick="() => PrepareUpdate(item.Id)">Update Record</button>
+                                <button class="btn btn-danger" @onclick="() => Delete(item.Id)">Delete Record</button>
+                            </div>
+                        </td>
+                    </tr>
+                </Virtualize>
+            </tbody>
+        </table>
+    </div>
+    <div class="container-fluid">
+        <div class="btn-group">
+            <button class="btn btn-primary" type="button" @onclick="PrepareCreate"
+                    data-bs-target="#inputModal">
+                Create New Record
+            </button>
+        </div>
+    </div>
+
+    <!--Modal form-->
+    <div id="inputModal" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <EditForm EditContext="@editContext" OnValidSubmit="HandleCreateFormSubmit">
+                    <DataAnnotationsValidator />
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="staticBackdropLabel">Create New Data</h5>
+                        <button type="button" class="btn-close"
+                                onclick="modalCommand('inputModal', false)" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="phoneNumber">Name</label>
+                            <InputText @bind-Value="itemObject.Name" class="form-control" id="phoneNumber" placeholder="Enter name here.." />
+                            <ValidationMessage For="() => itemObject.Name" />
+                        </div>
+                        <div class="form-group">
+                            <label for="phoneNumber">Phone Number</label>
+                            <InputText @bind-Value="itemObject.PhoneNumber" class="form-control" id="phoneNumber" placeholder="Enter phone number here.." />
+                            <ValidationMessage For="() => itemObject.PhoneNumber" />
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <InputText @bind-Value="itemObject.Email" class="form-control" id="email" placeholder="Enter email here.." />
+                            <ValidationMessage For="() => itemObject.Email" />
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Address</label>
+                            <InputTextArea @bind-Value="itemObject.Address" class="form-control" id="address" placeholder="Enter address here.." />
+                            <ValidationMessage For="() => itemObject.Address" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary"
+                                onclick="modalCommand('inputModal', false)">
+                            Close
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            @if (itemObject.Id <= 0)
+                            {
+                                <span>Create</span>
+                            }
+                            else
+                            {
+                                <span>Update</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+
+    <!--Modal course-->
+    <div id="courseModal" class="modal">
+        <div class="modal-dialog" style="max-width:700px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="staticBackdropLabel">Course List</h5>
+                    <button type="button" class="btn-close"
+                            onclick="modalCommand('courseModal', false)" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Course Code</th>
+                                    <th>Name</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <Virtualize Items="SelectedCoursesList" Context="item" ItemSize="5">
+                                    <tr>
+                                        <td>@item.CourseCode</td>
+                                        <td>@item.Name</td>
+                                        <td><button type="button" class=btn-danger @onclick="() => RemoveCourse(item.Id, this.studentId)">Remove</button></td>
+                                    </tr>
+                                </Virtualize>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            onclick="modalCommand('courseModal', false)">
+                        Close
+                    </button>
+                    <button type="button" class="btn btn-primary" @onclick="() => PrepareAddCourse(this.studentId)">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--Add course-->
+    <div id="addCourseModal" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="staticBackdropLabel">Add Course</h5>
+                    <button type="button" class="btn-close"
+                            onclick="modalCommand('addCourseModal', false)" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="container align-content-center">
+                        <select class="form-select" @bind="selectedCourse">
+                            <option value="0" selected>Select here..</option>
+                            @foreach (var item in CourseList)
+                            {
+                                <option value="@item.Id">@item.CourseCode - @item.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            onclick="modalCommand('addCourseModal', false)">
+                        Close
+                    </button>
+                    <button type="button" class="btn btn-primary" @onclick="AddCourse">Add</button>
+                    @code {
+                        long selectedCourse;
+
+                        void AddCourse()
+                        {
+                            if (selectedCourse <= 0)
+                            {
+                                js.InvokeVoidAsync("alert", "Please select course first");
+                                return;
+                            }
+
+                            StudentCourseRelationService svc = new();
+                            var add = svc.Create(
+                            new StudentCourseRelation
+            {
+                StudentId = studentId,
+                CourseId = selectedCourse
+            });
+
+                            js.InvokeVoidAsync("modalCommand", "addCourseModal", false);
+
+                            StudentCourseRelationService svc1 = new();
+                            SelectedCoursesList = svc1.CoursesTaken(studentId);
+                            StateHasChanged();
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    List<Student> dataList;
+    StudentService service;
+    EditContext editContext;
+    Student itemObject;
+    List<Course> SelectedCoursesList = new();
+    List<Course> CourseList = new();
+    long studentId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        itemObject = new();
+        editContext = new EditContext(itemObject);
+
+        if (service is null) { service = new(); }
+        dataList = service.ReadAll();
+    }
+
+    async Task HandleCreateFormSubmit()
+    {
+        if (itemObject?.Id > 0)
+        {
+            Update(itemObject);
+            return;
+        }
+        Create(itemObject);
+    }
+
+    async void PrepareCreate()
+    {
+        itemObject = new();
+        editContext = new EditContext(itemObject);
+        StateHasChanged();
+        await js.InvokeVoidAsync("modalCommand", "inputModal", true);
+    }
+
+    async void Create(Student data)
+    {
+        try
+        {
+            var create = service.Create(data);
+            if (create)
+            {
+                await js.InvokeVoidAsync("modalCommand", "inputModal", false);
+                await js.InvokeVoidAsync("alert", "Create data success");
+                dataList = service.ReadAll();
+                StateHasChanged();
+                return;
+            }
+            await js.InvokeVoidAsync("alert", "Create data failed");
+        }
+        catch (Exception ex)
+        {
+            await js.InvokeVoidAsync("alert", "Create data failed");
+        }
+    }
+
+    async void PrepareUpdate(long id)
+    {
+        itemObject = service.FindById(id);
+
+        if (itemObject is not null)
+        {
+            await js.InvokeVoidAsync("modalCommand", "inputModal", true);
+            return;
+        }
+        await js.InvokeVoidAsync("aler", "Cannot find selected data");
+    }
+
+    async void Update(Student data)
+    {
+        try
+        {
+            var update = service.Update(data);
+            if (update)
+            {
+                await js.InvokeVoidAsync("modalCommand", "inputModal", false);
+                await js.InvokeVoidAsync("alert", "Update data success");
+                dataList = service.ReadAll();
+                StateHasChanged();
+                return;
+            }
+            await js.InvokeVoidAsync("alert", "Update data failed");
+        }
+        catch (Exception ex)
+        {
+            await js.InvokeVoidAsync("alert", "Update data failed");
+        }
+    }
+
+    async void Delete(long id)
+    {
+        try
+        {
+            var delete = service.Delete(id);
+            if (delete)
+            {
+                await js.InvokeVoidAsync("alert", "Delete data success");
+                dataList = service.ReadAll();
+                StateHasChanged();
+                return;
+            }
+            await js.InvokeVoidAsync("alert", "Delete data failed");
+        }
+        catch (Exception ex)
+        {
+            await js.InvokeVoidAsync("alert", "Delete data failed");
+        }
+    }
+
+    async void ShowCourse(long studentId)
+    {
+        this.studentId = studentId;
+        StudentCourseRelationService svc = new();
+        SelectedCoursesList = svc.CoursesTaken(studentId);
+        StateHasChanged();
+        await js.InvokeVoidAsync("modalCommand", "courseModal", true);
+    }
+
+    async Task RemoveCourse(long courseId, long studentId)
+    {
+        try
+        {
+            StudentCourseRelationService svc = new();
+            var remove = svc.DeleteByStudentandCourseId(courseId, studentId);
+            if (remove)
+            {
+                SelectedCoursesList = svc.CoursesTaken(studentId);
+            }
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+
+        }
+    }
+
+    async void PrepareAddCourse(long studentId)
+    {
+        CourseService svc = new();
+        selectedCourse = 0;
+        CourseList = svc.ReadAll();
+        StateHasChanged();
+
+        await js.InvokeVoidAsync("modalCommand", "addCourseModal", true);
+    }
+}
